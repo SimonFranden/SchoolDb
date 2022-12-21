@@ -9,7 +9,7 @@ namespace SchoolDb
         {
             var context = new SchoolDbContext();
 
-            string[] options = { "Hämta personal SQL", "Hämta elever", "Hämta Klass", "Hämta senaste månadens betyg SQL", "Hämta kurs + snittbetyg SQL", "Lägg till elev SQL", "Lägg till lärare"};
+            string[] options = { "Hämta personal", "Hämta elever", "Hämta Klass", "Hämta senaste månadens betyg", "Hämta kurser", "Lägg till elev", "Lägg till lärare"};
             string body = "Välkommen";
             while(true)
             {
@@ -30,7 +30,7 @@ namespace SchoolDb
                         GetLastMonthGrades();
                         break;
                     case 4:
-                        
+                        GetSubjects();
                         break;
                     case 5:
                         CreateStudent();
@@ -44,16 +44,27 @@ namespace SchoolDb
             void GetStaff()
             {
                 
-                string[] options = new string[context.StaffRoles.Count()];
+                string[] options = new string[context.StaffRoles.Count() + 1];
                 int i = 0;
                 foreach (var sr in context.StaffRoles)
                 {
                     options[i] = sr.Title;
                     i++;
                 }
+                options[context.StaffRoles.Count()] = "Alla";
                 ViewUI ShowClassView = new ViewUI("Välj Kategori", options, "");
                 int selectedOption = ShowClassView.Run();
-                string staffListQuery = $"SELECT * FROM Staff WHERE FK_StaffRoleId = {selectedOption + 1}";
+                string staffListQuery;
+                if (selectedOption == options.Length - 1)
+                {
+                    staffListQuery = $"SELECT * FROM Staff";
+                }
+                else
+                {
+                    staffListQuery = $"SELECT * FROM Staff WHERE FK_StaffRoleId = {selectedOption + 1}";
+
+                }
+                
 
                 var staffList = context.staff.FromSqlRaw(staffListQuery);                
                 body = "";
@@ -146,10 +157,33 @@ namespace SchoolDb
             {
                 var gradeList = context.Grades.FromSqlRaw("SELECT * FROM Grade WHERE DateAdded >= DateAdd(Day, DateDiff(Day, 0, GetDate())-30, 0)");
                 var studentList = context.Students.FromSqlRaw("SELECT * FROM Student").ToList();
+                var subjectList = context.Subjects.FromSqlRaw("SELECT * FROM Subject").ToList();
                 body = "";
                 foreach (var g in gradeList)
                 {
-                    body += $"Elev: {studentList[g.FkStudentId - 1].Fname} {studentList[g.FkStudentId - 1].Lname}  Ämne: {g.GradeSubject}   Betyg: {g.Grade1}\n";
+                    body += $"Elev: {studentList[g.FkStudentId - 1].Fname} {studentList[g.FkStudentId - 1].Lname}  Ämne: {subjectList[g.FkSubjectId - 1].Title}   Betyg: {g.Grade1}   Datum: {g.DateAdded}\n";
+                }
+            }
+            void GetSubjects()
+            {
+                var subjectList = context.Subjects.FromSqlRaw("SELECT * FROM Subject").ToList();
+                
+                body = "";
+                int i = 0;
+                foreach (var s in subjectList)
+                {
+
+                    var gradeList = context.Grades.FromSqlRaw($"SELECT * FROM Grade WHERE FK_SubjectId = {i + 1}");
+                    float avarageGrade = 0;
+                    foreach(var g in gradeList)
+                    {
+                        avarageGrade = avarageGrade + g.Grade1;
+
+                    }
+                    avarageGrade = (avarageGrade / gradeList.Count());
+                    
+                    body += $" {s.Title}   Snittbetyg: {avarageGrade}\n";
+                    i++;
                 }
             }
             void CreateStudent()
@@ -174,8 +208,9 @@ namespace SchoolDb
                 }
                 ViewUI ShowClassView = new ViewUI("Klass", options, "");
                 int selectedOption = ShowClassView.Run();
-                int classId = (selectedOption + 1);               
-                context.Database.ExecuteSqlRaw($"INSERT INTO Student (FName, LName, SocialNum, FK_ClassId) VALUES ({firstName}, {lastName}, {socialNumber}, {classId})");
+                int classId = (selectedOption + 1);
+                //ToDo fixa raden under
+                context.Database.ExecuteSqlRaw($"INSERT INTO Student (FName, LName, SocialNum, FK_ClassId) VALUES ('{firstName}', '{lastName}', '{socialNumber}', '{classId}')");
                 body = "Elev tillagd!";
             }
             void CreateStaff()

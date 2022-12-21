@@ -21,6 +21,7 @@ namespace SchoolDb.Data
         public virtual DbSet<Grade> Grades { get; set; } = null!;
         public virtual DbSet<StaffRole> StaffRoles { get; set; } = null!;
         public virtual DbSet<Student> Students { get; set; } = null!;
+        public virtual DbSet<Subject> Subjects { get; set; } = null!;
         public virtual DbSet<staff> staff { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -47,27 +48,33 @@ namespace SchoolDb.Data
             {
                 entity.ToTable("Grade");
 
+                entity.Property(e => e.DateAdded).HasColumnType("date");
+
                 entity.Property(e => e.FkStaffId).HasColumnName("FK_StaffId");
 
                 entity.Property(e => e.FkStudentId).HasColumnName("FK_StudentId");
 
-                entity.Property(e => e.Grade1)
-                    .HasMaxLength(5)
-                    .HasColumnName("Grade");
+                entity.Property(e => e.FkSubjectId).HasColumnName("FK_SubjectId");
 
-                entity.Property(e => e.GradeSubject).HasMaxLength(30);
+                entity.Property(e => e.Grade1).HasColumnName("Grade");
 
                 entity.HasOne(d => d.FkStaff)
                     .WithMany(p => p.Grades)
                     .HasForeignKey(d => d.FkStaffId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Grade__FK_StaffI__6383C8BA");
+                    .HasConstraintName("FK__Grade__FK_StaffI__6A30C649");
 
                 entity.HasOne(d => d.FkStudent)
                     .WithMany(p => p.Grades)
                     .HasForeignKey(d => d.FkStudentId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
-                    .HasConstraintName("FK__Grade__FK_Studen__628FA481");
+                    .HasConstraintName("FK__Grade__FK_Studen__693CA210");
+
+                entity.HasOne(d => d.FkSubject)
+                    .WithMany(p => p.Grades)
+                    .HasForeignKey(d => d.FkSubjectId)
+                    .OnDelete(DeleteBehavior.ClientSetNull)
+                    .HasConstraintName("FK__Grade__FK_Subjec__68487DD7");
             });
 
             modelBuilder.Entity<StaffRole>(entity =>
@@ -101,6 +108,15 @@ namespace SchoolDb.Data
                     .WithMany(p => p.Students)
                     .HasForeignKey(d => d.FkClassId)
                     .HasConstraintName("FK__Student__FK_Clas__5FB337D6");
+            });
+
+            modelBuilder.Entity<Subject>(entity =>
+            {
+                entity.ToTable("Subject");
+
+                entity.Property(e => e.Title)
+                    .HasMaxLength(30)
+                    .IsUnicode(false);
             });
 
             modelBuilder.Entity<staff>(entity =>
