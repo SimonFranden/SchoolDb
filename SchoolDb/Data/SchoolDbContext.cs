@@ -123,6 +123,8 @@ namespace SchoolDb.Data
             {
                 entity.ToTable("Staff");
 
+                entity.Property(e => e.EmpDate).HasColumnType("date");
+
                 entity.Property(e => e.FkStaffRoleId).HasColumnName("FK_StaffRoleId");
 
                 entity.Property(e => e.Fname)

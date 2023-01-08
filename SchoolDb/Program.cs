@@ -9,7 +9,7 @@ namespace SchoolDb
         {
             var context = new SchoolDbContext();
 
-            string[] options = { "Hämta personal", "Hämta elever", "Hämta Klass", "Hämta senaste månadens betyg", "Hämta kurser", "Lägg till elev", "Lägg till lärare"};
+            string[] options = { "Hämta avdelningar", "Hämta elever", "Hämta Klass", "Hämta senaste månadens betyg", "Hämta kurser", "Lägg till elev", "Lägg till personal"};
             string body = "Välkommen";
             while(true)
             {
@@ -18,7 +18,7 @@ namespace SchoolDb
                 switch (selectedOptions)
                 {
                     case 0:
-                        GetStaff();
+                        GetStaffRoles();
                         break;
                     case 1:
                         ShowStudents();
@@ -41,40 +41,25 @@ namespace SchoolDb
                 }
             }
             
-            void GetStaff()
+            void GetStaffRoles()
             {
                 
                 string[] options = new string[context.StaffRoles.Count() + 1];
                 int i = 0;
-                foreach (var sr in context.StaffRoles)
-                {
-                    options[i] = sr.Title;
-                    i++;
-                }
-                options[context.StaffRoles.Count()] = "Alla";
-                ViewUI ShowClassView = new ViewUI("Välj Kategori", options, "");
-                int selectedOption = ShowClassView.Run();
-                string staffListQuery;
-                if (selectedOption == options.Length - 1)
-                {
-                    staffListQuery = $"SELECT * FROM Staff";
-                }
-                else
-                {
-                    staffListQuery = $"SELECT * FROM Staff WHERE FK_StaffRoleId = {selectedOption + 1}";
 
-                }
-                
-
-                var staffList = context.staff.FromSqlRaw(staffListQuery);                
+                var staffRoles = context.StaffRoles.ToList();
                 body = "";
-                foreach (var s in staffList)
+                foreach (var sr in staffRoles)
                 {
-                    body += $" {s.Fname} {s.Lname}\n";
+                    body += $"{sr.Title} {GetstaffAmount(sr)}st\n";
                 }
-                
 
-
+                int GetstaffAmount(StaffRole sr)
+                {
+                    var myStaff = context.staff.Where(s => s.FkStaffRoleId == sr.StaffRoleId);
+                    int staffCount = myStaff.Count();
+                    return staffCount;
+                }
             }
             void ShowStudents()
             {
@@ -117,11 +102,11 @@ namespace SchoolDb
                         }
                         break;
                 }               
-                body = "";
+                body = "Elever\n";
                 Console.WriteLine("Loading...");
                 foreach (var Student in myStudents)
                 {
-                    body += $"{Student.Fname} {Student.Lname} \n";
+                    body += $"Namn: {Student.Fname} {Student.Lname}  Personnummer: {Student.SocialNum}\n";
                 }
                 
             }
@@ -244,11 +229,7 @@ namespace SchoolDb
 
                 body = "Personal tillagd!";
 
-            }
-
-
-           
-            
+            }           
         }
     }
 }

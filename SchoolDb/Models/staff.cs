@@ -14,6 +14,8 @@ namespace SchoolDb.Models
         public string Fname { get; set; } = null!;
         public string? Lname { get; set; }
         public int? FkStaffRoleId { get; set; }
+        public DateTime? EmpDate { get; set; }
+        public int? Salary { get; set; }
 
         public virtual StaffRole? FkStaffRole { get; set; }
         public virtual ICollection<Grade> Grades { get; set; }
